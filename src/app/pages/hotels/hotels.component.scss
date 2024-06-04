@@ -1,0 +1,11 @@
+.container::-webkit-scrollbar {
+    @apply bg-primary w-1  rounded-lg
+  }
+
+.container::-webkit-scrollbar-thumb {
+    @apply bg-secondary rounded-lg
+  }
+  
+  .container::-webkit-scrollbar-track {
+   @apply bg-white
+  }

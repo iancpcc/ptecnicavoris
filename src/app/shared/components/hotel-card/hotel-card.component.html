@@ -1,0 +1,37 @@
+<div class="flex gap-x-5 items-center p-2 shadow-md max-w-3/4 h-40 cursor-pointer">
+    <img class="h-32 w-32" [src]="hotel.image|| 'No image available'" alt="" />
+    <div class="flex justify-between w-full p-5">
+      <div class="grow shrink">
+        <h2  class="hotel-name font-bold text-lg">{{ hotel.name }}</h2>
+        <div class="">
+          @for (start of hotel.stars| arrayFromNumber; track $index) {
+          <span class="material-symbols-outlined text-primary">
+            grade
+          </span>
+          }
+          <!-- {{ hotel.stars }} -->
+        </div>
+        <div class="Calificacion">
+          <span
+            [ngClass]="{
+          'text-green-800 bg-green-100 ':hotel.rate >=4 && hotel.rate <=5 ,
+          'bg-yellow-100 text-yellow-800 ':hotel.rate >=2 && hotel.rate <4,
+          'bg-red-100 text-red-800 ':hotel.rate >=0 && hotel.rate <2,
+         
+         
+        }"
+            class="text-xs font-medium me-2 px-2.5 py-0.5 rounded"
+            >{{ hotel.rate }}</span
+          >
+        </div>
+        <div class="flex items-center mt-2">
+          <span class="material-symbols-outlined text-red-300">
+            location_on
+          </span>
+          <span class="text-gray-500">{{ hotel.address }}</span>
+        </div>
+      </div>
+      <span class="font-bold text-lg grow-0">{{ hotel.price }}€</span>
+      <div></div>
+    </div>
+  </div>

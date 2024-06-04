@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { HotelService } from '../../core/services/hotel.service';
 import { HotelsComponent } from './hotels.component';
+import { HttpClientModule } from '@angular/common/http';
 
 describe('HotelsComponent', () => {
   let component: HotelsComponent;
@@ -8,7 +10,7 @@ describe('HotelsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HotelsComponent]
+      imports: [HotelsComponent, HttpClientModule],
     })
     .compileComponents();
     
@@ -18,6 +20,7 @@ describe('HotelsComponent', () => {
   });
 
   it('should create', () => {
+    
     expect(component).toBeTruthy();
   });
 });
