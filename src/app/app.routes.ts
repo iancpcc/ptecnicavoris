@@ -5,8 +5,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
     {
         path: '',
-
-        component: DefaultComponent,
+        component: DefaultComponent, //Esta va a ser el layout principal sobre el que se van a trabajar futuros desarrollos
         children: [
             {
                 path: '',
@@ -16,7 +15,6 @@ export const routes: Routes = [
             {
                 path: 'hotels',
                 component: HotelsComponent
-
             }
         ]
     }

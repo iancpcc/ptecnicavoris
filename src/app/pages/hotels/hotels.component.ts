@@ -1,6 +1,6 @@
 import { AppState, IApiResponse } from '../../core/models/app-state.model';
-import { Component, ElementRef, NgModule, OnInit, effect, inject, signal } from '@angular/core';
-import { Observable, filter, map, take } from 'rxjs';
+import { Component, ElementRef, NgModule, OnDestroy, OnInit, effect, inject, signal } from '@angular/core';
+import { Observable, Subject, filter, map, take, takeUntil } from 'rxjs';
 
 import { ArrayFromNumberPipe } from '../../core/pipes/array-from-number.pipe';
 import { CommonModule } from '@angular/common';
@@ -16,41 +16,53 @@ import { IHotel } from '../../core/models/hotel.model';
   templateUrl: './hotels.component.html',
   styleUrl: './hotels.component.scss'
 })
-export class HotelsComponent implements OnInit {
+export class HotelsComponent implements OnInit, OnDestroy {
+
 
 
   hoteService = inject(HotelService)
   elementRef = inject(ElementRef)
-  APP_STATE = AppState
+  APP_STATE = AppState //Para manejar el estado de los datos en el template y aqui
   FILTRO_TIPO = IFilterProperties
-  hotelsPaginados: IApiResponse<IHotel[]> = { state: this.APP_STATE.LOADING, data: [] };
+
+  hotelsPaginados: IApiResponse<IHotel[]> = { state: this.APP_STATE.LOADING, data: [] }; //Almacena el listado de hoteles paginados
+
+  // Signal para manejar el estado de los filtros
   filterOptions = signal({
     name: '',
     price: null,
     rate: null,
     starts: [] as number[]
   })
-
+  // Variables para mostrar en el template la informacion de la paginacion
   currentPage = 1;
   totalRecords = 0;
   totalPages = 0;
+  // Cerrar Suscripcion
+  endSuscripition$ = new Subject();
 
   ngOnInit(): void {
-    this.hoteService.obtenerHoteles$()
+    this.hoteService.obtenerHoteles$().pipe(
+      takeUntil(this.endSuscripition$)
+    )
       .subscribe(
         response => {
-          this.hotelsPaginados = { ...response };
-          this.hotelsPaginados.data = this.paginarHoteles(this.hotelsPaginados.data!, 1)
+          this.hotelsPaginados = { ...response }; //Obtengo los datos
+          this.hotelsPaginados.data = this.paginarHoteles(this.hotelsPaginados.data!, 1) //Pagino la data y que se muestre la pagina 1
         }
 
       )
+  }
+
+  ngOnDestroy(): void {
+    this.endSuscripition$.unsubscribe() //Me desuscribo 
   }
 
 
 
   paginarHoteles(hotels: IHotel[], pageNumber: number): IHotel[] {
     if (!hotels) { return [] }
-    const pageSize = 10;
+    const pageSize = 10; //El limite de paginacion va a ser de 10 items por pagina
     const startIndex = (pageNumber - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, hotels.length);
     this.totalPages = Math.ceil(hotels.length / pageSize);
@@ -61,7 +73,7 @@ export class HotelsComponent implements OnInit {
 
 
   onFilter(tipo: IFilterProperties, valor: number | string) {
-
+    // Actualizo todas las propiedades del filtro 
     this.filterOptions.update(r => {
       switch (tipo) {
         case (this.FILTRO_TIPO.PRICE):
@@ -78,16 +90,17 @@ export class HotelsComponent implements OnInit {
       }
       return r;
     })
-
+    // empiezo a filtrar
     this.filterOriginalList().subscribe(lista => {
-      this.hotelsPaginados.data = this.paginarHoteles(lista, 1)
+      this.hotelsPaginados.data = this.paginarHoteles(lista, 1) //Por cada filtrado  realizo nuevamente la paginacion
     })
 
   }
 
   filterOriginalList() {
+    // Destructuro las variables del signal para trabajar mas facil
     const { name, price, rate, starts } = this.filterOptions();
-
+    // filtro por nombre, precio, valoracion y estrellas
     return this.hoteService.obtenerHoteles$().pipe(
       map(
         lista => {
@@ -106,11 +119,13 @@ export class HotelsComponent implements OnInit {
             }
             return lista;
           })
-        })
+        }),
+      takeUntil(this.endSuscripition$) //destruyo la suscripcion
     )
 
   }
 
+  // Este filtrado es por categoria de estrellas
   seleccionaCategoria(event: Event, valor: number) {
     const inputElement = event.target as HTMLInputElement;
     this.filterOptions.update(h => {
@@ -128,6 +143,8 @@ export class HotelsComponent implements OnInit {
     })
 
   }
+
+
   nextOrPreviusPage(pageNumber: number) {
     if (pageNumber < 1 || pageNumber > this.totalPages) return
     // const hotel = 
@@ -139,24 +156,16 @@ export class HotelsComponent implements OnInit {
   }
 
 
-
+  //Reseteo variables, listado y elementos del DOM
   restablecer(event: Event) {
     event.preventDefault()
     this.filterOptions.set({ price: null, rate: null, starts: [], name: '' })
     this.filterOriginalList().subscribe(lista => {
       this.hotelsPaginados.data = this.paginarHoteles(lista, 1)
     })
-    this.onresetFields();
-
-
-  }
-
-  onresetFields() {
     let form = this.elementRef.nativeElement.querySelector('form');
     form.reset();
+
   }
-
-
-
 
 }
